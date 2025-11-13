@@ -50,7 +50,7 @@ def iniciar_aplicacion():
         # ... (debes completar la implementación de las otras vistas aquí)
         elif opcion == '6':
             manager.db.cerrar()
-            print("Cerrando el sistema. ¡Adiós!")
+            print("Cerrando el sistema.")
             break
         else:
             print("Opción no válida. Intente de nuevo.")
