@@ -6,7 +6,7 @@ class Validador:
     @staticmethod
     def validar_dni(dni):
         # Valida 7 u 8 dígitos
-        if re.match(r'^\d{7,8}$', dni):
+        if re.match(r'^[A-Za-z]?\d{7,8}$', dni):
             return True
         return False
 
