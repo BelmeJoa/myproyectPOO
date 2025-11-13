@@ -18,7 +18,7 @@ class Database:
             # Conexión parametrizada [cite: 27]
             self.conn = mysql.connector.connect(**DB_CONFIG)
             if self.conn.is_connected():
-                # cursor(prepared=True) garantiza Consultas Preparadas [cite: 27]
+                # cursor(prepared=True) garantiza Consultas Preparadas 
                 self.cursor = self.conn.cursor(prepared=True)
         except Error as e:
             print(f"Error al conectar a MySQL: {e}")
