@@ -91,7 +91,7 @@ class GestionKinesiologia:
         params = (turno.get_paciente_dni(), turno.get_fecha(), turno.get_hora(), turno._tratamiento)
         
         db = Database()
-        resultado = db.execute_query(query, params=params, commit=True)
+        resultado = db.ejecutar_consulta(query, params=params, commit=True)
         db.close()
         return resultado
 
@@ -101,7 +101,7 @@ class GestionKinesiologia:
         params = (id_turno,)
         
         db = Database()
-        datos_turno = db.execute_query(query, params=params, fetch_one=True)
+        datos_turno = db.ejecutar_consulta(query, params=params, fetch_one=True)
         db.close()
         
         if datos_turno:
@@ -115,7 +115,7 @@ class GestionKinesiologia:
         params = (turno.get_fecha(), turno.get_hora(), turno._tratamiento, turno.get_id())
         
         db = Database()
-        resultado = db.execute_query(query, params=params, commit=True)
+        resultado = db.ejecutar_consulta(query, params=params, commit=True)
         db.close()
         return resultado
 
@@ -125,6 +125,18 @@ class GestionKinesiologia:
         params = (id_turno,)
         
         db = Database()
-        resultado = db.execute_query(query, params=params, commit=True)
+        resultado = db.ejecutar_consulta(query, params=params, commit=True)
         db.close()
         return resultado
+
+    def buscar_turnos_por_criterio(self, criterio, valor):
+        # ... código para armar la query ...
+        
+        db = Database()
+        # 1. OBTIENE LOS DATOS (SELECT)
+        datos_turnos = db.obtener_datos(query, params=(valor,))
+        db.cerrar()
+        
+        # ... Aquí el código procesa lista_turnos ...
+        # ...
+        return datos_turnos
