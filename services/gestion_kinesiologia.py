@@ -91,7 +91,7 @@ class GestionKinesiologia:
         params = (turno.get_paciente_dni(), turno.get_fecha(), turno.get_hora(), turno._tratamiento)
         
         db = Database()
-        resultado = db._execute_query(query, params=params, commit=True)
+        resultado = db.execute_query(query, params=params, commit=True)
         db.close()
         return resultado
 
@@ -101,7 +101,7 @@ class GestionKinesiologia:
         params = (id_turno,)
         
         db = Database()
-        datos_turno = db._execute_query(query, params=params, fetch_one=True)
+        datos_turno = db.execute_query(query, params=params, fetch_one=True)
         db.close()
         
         if datos_turno:
@@ -115,7 +115,7 @@ class GestionKinesiologia:
         params = (turno.get_fecha(), turno.get_hora(), turno._tratamiento, turno.get_id())
         
         db = Database()
-        resultado = db._execute_query(query, params=params, commit=True)
+        resultado = db.execute_query(query, params=params, commit=True)
         db.close()
         return resultado
 
@@ -125,6 +125,6 @@ class GestionKinesiologia:
         params = (id_turno,)
         
         db = Database()
-        resultado = db._execute_query(query, params=params, commit=True)
+        resultado = db.execute_query(query, params=params, commit=True)
         db.close()
         return resultado

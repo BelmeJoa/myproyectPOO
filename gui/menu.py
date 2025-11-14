@@ -329,7 +329,7 @@ class InterfazKinesiologia(tk.Frame):
 
         # 3. Botón de Búsqueda
         tk.Button(ventana_busqueda, text="Buscar Turnos", 
-                command=lambda: self._ejecutar_busqueda_flexible(ventana_busqueda)).pack(pady=15)
+                command=lambda: self.ejecutar_busqueda_flexible(ventana_busqueda)).pack(pady=15)
 
         # 4. Área para mostrar resultados (Usaremos ScrolledText)
         self.caja_resultados_turnos = scrolledtext.ScrolledText(ventana_busqueda, width=60, height=10, font=('Consolas', 10))
@@ -368,7 +368,7 @@ class InterfazKinesiologia(tk.Frame):
             self.id_cancelar_var = tk.StringVar()
             tk.Entry(ventana_busqueda, textvariable=self.id_cancelar_var, width=10).pack(pady=5)
             tk.Button(ventana_busqueda, text="Cancelar Turno por ID", 
-                    command=lambda: self._ejecutar_cancelacion_desde_busqueda(self.id_cancelar_var.get(), ventana_busqueda)).pack(pady=10)
+                    command=lambda: self.ejecutar_cancelacion_desde_busqueda(self.id_cancelar_var.get(), ventana_busqueda)).pack(pady=10)
 
 
         self.caja_resultados_turnos.config(state=tk.DISABLED)
