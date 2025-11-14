@@ -80,3 +80,50 @@ class GestionKinesiologia:
         ORDER BY p.apellido
         """
         return self.db.obtener_datos(query)
+    # =======================================================
+    # CRUD para Turnos
+    # =======================================================
+
+    def registrar_turno(self, turno):
+        """Registra un nuevo turno en la base de datos."""
+        query = "INSERT INTO turno (paciente_dni, fecha, hora, tratamiento) VALUES (%s, %s, %s, %s)"
+        params = (turno.get_paciente_dni(), turno.get_fecha(), turno.get_hora(), turno._tratamiento)
+        
+        db = Database()
+        resultado = db._execute_query(query, params=params, commit=True)
+        db.close()
+        return resultado
+
+    def buscar_turno_por_id(self, id_turno):
+        """Busca un turno por su ID y devuelve un objeto Turno."""
+        query = "SELECT id, paciente_dni, fecha, hora, tratamiento FROM turno WHERE id = %s"
+        params = (id_turno,)
+        
+        db = Database()
+        datos_turno = db._execute_query(query, params=params, fetch_one=True)
+        db.close()
+        
+        if datos_turno:
+            # Creamos un objeto Turno (Recuerda que los datos[0] es el id)
+            return Turno(datos_turno[0], datos_turno[1], datos_turno[2], datos_turno[3], datos_turno[4])
+        return None
+
+    def actualizar_turno(self, turno):
+        """Actualiza la fecha, hora y tratamiento de un turno existente."""
+        query = "UPDATE turno SET fecha = %s, hora = %s, tratamiento = %s WHERE id = %s"
+        params = (turno.get_fecha(), turno.get_hora(), turno._tratamiento, turno.get_id())
+        
+        db = Database()
+        resultado = db._execute_query(query, params=params, commit=True)
+        db.close()
+        return resultado
+
+    def eliminar_turno(self, id_turno):
+        """Elimina un turno por su ID."""
+        query = "DELETE FROM turno WHERE id = %s"
+        params = (id_turno,)
+        
+        db = Database()
+        resultado = db._execute_query(query, params=params, commit=True)
+        db.close()
+        return resultado

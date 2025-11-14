@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, scrolledtext
 from services.gestion_kinesiologia import GestionKinesiologia
 from models.paciente import Paciente 
+from models.turno import Turno
 from utils.validador import Validador # Necesario para la validación de entrada
 
 class InterfazKinesiologia(tk.Frame):
@@ -201,5 +202,72 @@ class InterfazKinesiologia(tk.Frame):
             reporte_texto.insert(tk.END, linea)
 
         reporte_texto.config(state=tk.DISABLED) # Deshabilita la edición
+    # --- Ventana Secundaria de Gestión de Turnos ---
+
+    def abrir_gestion_turnos(self):
+        self.ventana_turnos = tk.Toplevel(self.master)
+        self.ventana_turnos.title("Gestión de Turnos")
+        self.ventana_turnos.geometry("300x250")
+        
+        tk.Label(self.ventana_turnos, text="Opciones de Turnos", font=('Helvetica', 14, 'bold')).pack(pady=10)
+
+        # Botones CRUD para Turnos
+        tk.Button(self.ventana_turnos, text="1. Registrar Nuevo Turno", 
+                  command=self.abrir_registro_turno).pack(pady=5, fill='x', padx=20)
+        
+        tk.Button(self.ventana_turnos, text="2. Buscar Turno (ID)", 
+                  command=self.ejecutar_busqueda_turno).pack(pady=5, fill='x', padx=20)
+        
+        tk.Button(self.ventana_turnos, text="3. Cancelar Turno (Eliminar)", 
+                  command=self.ejecutar_eliminacion_turno).pack(pady=5, fill='x', padx=20)
+        
+        # ... Aquí podrías añadir botones de Actualizar Turno y Reporte de Turnos...
+
+    # --- Lógica CRUD para Turnos ---
+    
+    def abrir_registro_turno(self):
+        # En la práctica, se debería usar un formulario Toplevel, pero usaremos simpledialogs por simplicidad
+        paciente_dni = simpledialog.askstring("Registro Turno", "DNI del Paciente:", parent=self.ventana_turnos)
+        fecha = simpledialog.askstring("Registro Turno", "Fecha (AAAA-MM-DD):", parent=self.ventana_turnos)
+        hora = simpledialog.askstring("Registro Turno", "Hora (HH:MM):", parent=self.ventana_turnos)
+        tratamiento = simpledialog.askstring("Registro Turno", "Tratamiento:", parent=self.ventana_turnos)
+
+        if paciente_dni and fecha and hora:
+            # 1. Verificar si el paciente existe
+            if not self.manager.buscar_paciente_por_dni(paciente_dni):
+                 return messagebox.showwarning("Error", "El DNI del paciente no está registrado.")
+
+            # 2. Crear el objeto Turno (ID se pone como 0 o None porque la BD lo genera)
+            nuevo_turno = Turno(None, paciente_dni, fecha, hora, tratamiento) 
+            
+            # 3. Llamar al Service para guardar
+            if self.manager.registrar_turno(nuevo_turno):
+                messagebox.showinfo("Éxito", "✅ Turno registrado exitosamente.")
+            else:
+                messagebox.showerror("Error", "❌ Error al registrar el turno en la BD.")
+
+    def ejecutar_busqueda_turno(self):
+        id_buscar = simpledialog.askinteger("Buscar Turno", "Ingrese el ID del Turno a buscar:", parent=self.ventana_turnos)
+        if id_buscar is not None:
+            turno = self.manager.buscar_turno_por_id(id_buscar)
+            if turno:
+                info = (f"Turno Encontrado:\n"
+                        f"ID: {turno.get_id()}\n"
+                        f"DNI Paciente: {turno.get_paciente_dni()}\n"
+                        f"Fecha: {turno.get_fecha()} a las {turno.get_hora()}\n"
+                        f"Tratamiento: {turno._tratamiento}")
+                messagebox.showinfo("Resultado de Búsqueda", info)
+            else:
+                messagebox.showwarning("Resultado", f"Turno con ID {id_buscar} no encontrado.")
+
+    def ejecutar_eliminacion_turno(self):
+        id_eliminar = simpledialog.askinteger("Cancelar Turno", "Ingrese el ID del Turno a cancelar:", parent=self.ventana_turnos)
+        if id_eliminar is not None:
+            confirmar = messagebox.askyesno("Confirmar", f"¿Seguro que desea cancelar el Turno ID {id_eliminar}?")
+            if confirmar:
+                if self.manager.eliminar_turno(id_eliminar):
+                    messagebox.showinfo("Éxito", f"✅ Turno ID {id_eliminar} cancelado correctamente.")
+                else:
+                    messagebox.showerror("Error", f"❌ No se encontró o no se pudo cancelar el Turno ID {id_eliminar}.")
 
 

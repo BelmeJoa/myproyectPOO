@@ -5,8 +5,8 @@ from mysql.connector import Error
 # NOTA CRÍTICA: Debes cambiar 'TU_USUARIO_MYSQL' y 'TU_PASSWORD_MYSQL'
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'TU_USUARIO_MYSQL', 
-    'password': 'TU_PASSWORD_MYSQL', 
+    'user': 'root', 
+    'password': 'BelmeMySql2003', 
     'database': 'db_kinesiologia'
 }
 
