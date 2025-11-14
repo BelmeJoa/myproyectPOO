@@ -1,6 +1,7 @@
 # services/gestion_kinesiologia.py
 from data.database import Database
 from models.paciente import Paciente
+from models.turno import Turno
 
 class GestionKinesiologia:
     def __init__(self):

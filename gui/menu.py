@@ -32,9 +32,10 @@ class InterfazKinesiologia(tk.Frame):
         tk.Button(frame_crud, text="3. Actualizar Paciente (U)", command=self.abrir_actualizacion).grid(row=1, column=0, padx=10, pady=5, ipadx=5)
         tk.Button(frame_crud, text="4. Eliminar Paciente (D)", command=self.abrir_eliminacion).grid(row=1, column=1, padx=10, pady=5, ipadx=5)
         tk.Button(frame_crud, text="5. Generar Reporte", command=self.generar_reporte).grid(row=2, column=0, columnspan=2, pady=15, ipadx=20)
-        
+        tk.Button(frame_crud, text="6. Gestion de Turnos", command=self.abrir_gestion_turnos).grid(row=3, column=0, columnspan=2, pady=15, ipadx=20)
+
         # Botón 6: Salir
-        tk.Button(self, text="6. SALIR", command=self.master.quit, bg='red', fg='white').pack(pady=10)
+        tk.Button(self, text="7. SALIR", command=self.master.quit, bg='red', fg='white').pack(pady=10)
 
 
     # =======================================================
@@ -207,67 +208,182 @@ class InterfazKinesiologia(tk.Frame):
     def abrir_gestion_turnos(self):
         self.ventana_turnos = tk.Toplevel(self.master)
         self.ventana_turnos.title("Gestión de Turnos")
-        self.ventana_turnos.geometry("300x250")
+        # Ajusta el tamaño para que se vea bien
+        self.ventana_turnos.geometry("350x250") 
         
         tk.Label(self.ventana_turnos, text="Opciones de Turnos", font=('Helvetica', 14, 'bold')).pack(pady=10)
+
+        # 1. Registro de Turno (Llama al nuevo formulario limpio)
+        tk.Button(self.ventana_turnos, text="1. Registrar Nuevo Turno", 
+                  command=self.abrir_registro_turno).pack(pady=5, fill='x', padx=20)
+        
+        # 2. Búsqueda Flexible y Cancelación
+        # (Llama a la ventana que permite buscar por DNI o Fecha)
+        tk.Button(self.ventana_turnos, text="2. Buscar y Gestionar Turnos (DNI/Fecha)", 
+                  command=self.abrir_gestion_busqueda_turnos).pack(pady=5, fill='x', padx=20)
+
+        # 3. Listado Completo (Para ver todos los IDs/información si es necesario)
+        tk.Button(self.ventana_turnos, text="3. Listar Todos los Turnos (Ver IDs)",
+                  command=self.ejecutar_listado_turnos).pack(pady=5, fill='x', padx=20)
+        
+        # Opcional: Botón para cerrar esta ventana
+        tk.Button(self.ventana_turnos, text="Cerrar Menú", 
+                  command=self.ventana_turnos.destroy).pack(pady=10)
+
+    def abrir_registro_turno(self):
+        #"""Abre un formulario Toplevel para registrar un nuevo turno."""
+    
+        # 1.     Crear Ventana
+        ventana = tk.Toplevel(self.master)
+        ventana.title("Registrar Nuevo Turno")
+        ventana.geometry("400x350")
+    
+        # 2. Variables para almacenar los datos
+        self.dni_var = tk.StringVar()
+        self.fecha_var = tk.StringVar()
+        self.hora_var = tk.StringVar()
+        self.tratamiento_var = tk.StringVar()
+    
+        # 3. Diseño del Formulario
+        campos = [
+            ("DNI Paciente (Obligatorio):", self.dni_var),
+            ("Fecha (AAAA-MM-DD):", self.fecha_var),
+            ("Hora (HH:MM):", self.hora_var),
+            ("Tratamiento:", self.tratamiento_var),
+        ]
+
+        for texto, var in campos:
+            frame = tk.Frame(ventana)
+            tk.Label(frame, text=texto, width=20, anchor='w').pack(side='left', padx=5, pady=5)
+            tk.Entry(frame, textvariable=var, width=30).pack(side='right', padx=5, pady=5)
+            frame.pack(fill='x', padx=20)
+        
+        # 4. Botón de Confirmación
+        tk.Button(ventana, text="Confirmar Turno", 
+                command=lambda: self.guardar_nuevo_turno(ventana)).pack(pady=20)
 
         # Botones CRUD para Turnos
         tk.Button(self.ventana_turnos, text="1. Registrar Nuevo Turno", 
                   command=self.abrir_registro_turno).pack(pady=5, fill='x', padx=20)
-        
-        tk.Button(self.ventana_turnos, text="2. Buscar Turno (ID)", 
-                  command=self.ejecutar_busqueda_turno).pack(pady=5, fill='x', padx=20)
-        
-        tk.Button(self.ventana_turnos, text="3. Cancelar Turno (Eliminar)", 
-                  command=self.ejecutar_eliminacion_turno).pack(pady=5, fill='x', padx=20)
-        
-        # ... Aquí podrías añadir botones de Actualizar Turno y Reporte de Turnos...
 
-    # --- Lógica CRUD para Turnos ---
-    
-    def abrir_registro_turno(self):
-        # En la práctica, se debería usar un formulario Toplevel, pero usaremos simpledialogs por simplicidad
-        paciente_dni = simpledialog.askstring("Registro Turno", "DNI del Paciente:", parent=self.ventana_turnos)
-        fecha = simpledialog.askstring("Registro Turno", "Fecha (AAAA-MM-DD):", parent=self.ventana_turnos)
-        hora = simpledialog.askstring("Registro Turno", "Hora (HH:MM):", parent=self.ventana_turnos)
-        tratamiento = simpledialog.askstring("Registro Turno", "Tratamiento:", parent=self.ventana_turnos)
+        # NUEVO BOTÓN PARA GESTIONAR BÚSQUEDA Y CANCELACIÓN
+        tk.Button(self.ventana_turnos, text="2. Buscar y Gestionar Turnos (DNI/Fecha)", 
+                  command=self.abrir_gestion_busqueda_turnos).pack(pady=5, fill='x', padx=20)
 
-        if paciente_dni and fecha and hora:
-            # 1. Verificar si el paciente existe
-            if not self.manager.buscar_paciente_por_dni(paciente_dni):
-                 return messagebox.showwarning("Error", "El DNI del paciente no está registrado.")
+        tk.Button(self.ventana_turnos, text="3. Listar Todos los Turnos (Ver IDs)", # Listado para ver todos los IDs
+                  command=self.ejecutar_busqueda_flexible).pack(pady=5, fill='x', padx=20)
 
-            # 2. Crear el objeto Turno (ID se pone como 0 o None porque la BD lo genera)
-            nuevo_turno = Turno(None, paciente_dni, fecha, hora, tratamiento) 
-            
-            # 3. Llamar al Service para guardar
-            if self.manager.registrar_turno(nuevo_turno):
-                messagebox.showinfo("Éxito", "✅ Turno registrado exitosamente.")
+
+    def guardar_nuevo_turno(self, ventana):
+        """Lógica para guardar el turno desde el formulario."""
+        paciente_dni = self.dni_var.get()
+        fecha = self.fecha_var.get()
+        hora = self.hora_var.get()
+        tratamiento = self.tratamiento_var.get()
+        
+        # Validaciones básicas
+        if not paciente_dni or not fecha or not hora:
+            messagebox.showerror("Error", "Los campos DNI, Fecha y Hora son obligatorios.")
+            return
+
+        # 1. Verificar si el paciente existe
+        if not self.manager.buscar_paciente_por_dni(paciente_dni):
+            return messagebox.showwarning("Error", "❌ El DNI del paciente no está registrado. Registre primero al paciente.")
+
+        # 2. Creamos el objeto Turno (ID se pasa como None porque la BD lo genera)
+        # IMPORTANTE: El ID del turno es generado por la BD
+        nuevo_turno = Turno(None, paciente_dni, fecha, hora, tratamiento) 
+        
+        # 3. Llamar al Service para guardar
+        if self.manager.registrar_turno(nuevo_turno):
+            messagebox.showinfo("Éxito", "✅ Turno registrado exitosamente.")
+            ventana.destroy() # Cierra la ventana después de guardar
+        else:
+            messagebox.showerror("Error", "❌ Error al registrar el turno en la BD.")
+    # gui/menu.py (Dentro de la clase InterfazKinesiologia)
+
+    def abrir_gestion_busqueda_turnos(self):
+        """Abre la ventana para buscar turnos por criterio."""
+
+        ventana_busqueda = tk.Toplevel(self.master)
+        ventana_busqueda.title("Buscar Turnos por Criterio")
+        ventana_busqueda.geometry("500x450")
+
+        tk.Label(ventana_busqueda, text="Buscar Turnos", font=('Helvetica', 14, 'bold')).pack(pady=10)
+
+        # 1. Selección de Criterio
+        self.criterio_busqueda_var = tk.StringVar(value='paciente_dni') # DNI por defecto
+
+        frame_criterio = tk.Frame(ventana_busqueda)
+        tk.Label(frame_criterio, text="Buscar por:").pack(side='left', padx=10)
+        tk.Radiobutton(frame_criterio, text="DNI Paciente", variable=self.criterio_busqueda_var, 
+                    value='paciente_dni').pack(side='left')
+        tk.Radiobutton(frame_criterio, text="Fecha (AAAA-MM-DD)", variable=self.criterio_busqueda_var, 
+                    value='fecha').pack(side='left')
+        frame_criterio.pack(pady=10)
+
+        # 2. Campo de Valor de Búsqueda
+        self.valor_busqueda_var = tk.StringVar()
+        tk.Label(ventana_busqueda, text="Ingrese Valor:").pack(pady=5)
+        tk.Entry(ventana_busqueda, textvariable=self.valor_busqueda_var, width=40).pack(pady=5)
+
+        # 3. Botón de Búsqueda
+        tk.Button(ventana_busqueda, text="Buscar Turnos", 
+                command=lambda: self._ejecutar_busqueda_flexible(ventana_busqueda)).pack(pady=15)
+
+        # 4. Área para mostrar resultados (Usaremos ScrolledText)
+        self.caja_resultados_turnos = scrolledtext.ScrolledText(ventana_busqueda, width=60, height=10, font=('Consolas', 10))
+        self.caja_resultados_turnos.pack(pady=10, padx=10)
+        self.caja_resultados_turnos.insert(tk.END, "Aquí se mostrarán los resultados de la búsqueda.")
+        self.caja_resultados_turnos.config(state=tk.DISABLED)
+
+
+    def ejecutar_busqueda_flexible(self, ventana_busqueda):
+        """Llama al servicio con el criterio seleccionado y muestra los resultados."""
+        criterio = self.criterio_busqueda_var.get()
+        valor = self.valor_busqueda_var.get()
+
+        if not valor:
+            return messagebox.showwarning("Advertencia", "Debe ingresar un valor de búsqueda.")
+
+        # 1. Llamar al servicio mejorado
+        turnos = self.manager.buscar_turnos_por_criterio(criterio, valor)
+
+        self.caja_resultados_turnos.config(state=tk.NORMAL)
+        self.caja_resultados_turnos.delete('1.0', tk.END) # Limpiar resultados anteriores
+
+        if not turnos:
+            self.caja_resultados_turnos.insert(tk.END, f"No se encontraron turnos para {valor} ({criterio}).")
+        else:
+            self.caja_resultados_turnos.insert(tk.END, f"TURNOS ENCONTRADOS para {criterio.upper()}: {valor}\n\n")
+            for t in turnos:
+                self.caja_resultados_turnos.insert(tk.END, 
+                    f"  [ID: {t.get_id()}] | Hora: {t.get_hora()} | DNI: {t.get_paciente_dni()}\n"
+                    f"  Fecha: {t.get_fecha()} | Tratamiento: {t._tratamiento}\n"
+                    f"{'-'*60}\n"
+                )
+
+            # Añadir opción de cancelación
+            tk.Label(ventana_busqueda, text="Para Cancelar, ingrese el ID:").pack(pady=5)
+            self.id_cancelar_var = tk.StringVar()
+            tk.Entry(ventana_busqueda, textvariable=self.id_cancelar_var, width=10).pack(pady=5)
+            tk.Button(ventana_busqueda, text="Cancelar Turno por ID", 
+                    command=lambda: self._ejecutar_cancelacion_desde_busqueda(self.id_cancelar_var.get(), ventana_busqueda)).pack(pady=10)
+
+
+        self.caja_resultados_turnos.config(state=tk.DISABLED)
+
+    def ejecutar_cancelacion_desde_busqueda(self, turno_id, ventana_busqueda):
+        """Cancela un turno después de haber sido listado en la búsqueda flexible."""
+        try:
+            id_a_cancelar = int(turno_id)
+        except ValueError:
+            return messagebox.showerror("Error", "El ID debe ser un número entero.")
+
+        if messagebox.askyesno("Confirmar Cancelación", f"¿Está seguro de cancelar el turno con ID: {id_a_cancelar}?"):
+            if self.manager.eliminar_turno(id_a_cancelar):
+                messagebox.showinfo("Éxito", f"✅ Turno con ID {id_a_cancelar} cancelado exitosamente.")
+                ventana_busqueda.destroy() # Cierra la ventana de búsqueda
+                self.abrir_gestion_turnos().focus_set() # Vuelve al menú de gestión
             else:
-                messagebox.showerror("Error", "❌ Error al registrar el turno en la BD.")
-
-    def ejecutar_busqueda_turno(self):
-        id_buscar = simpledialog.askinteger("Buscar Turno", "Ingrese el ID del Turno a buscar:", parent=self.ventana_turnos)
-        if id_buscar is not None:
-            turno = self.manager.buscar_turno_por_id(id_buscar)
-            if turno:
-                info = (f"Turno Encontrado:\n"
-                        f"ID: {turno.get_id()}\n"
-                        f"DNI Paciente: {turno.get_paciente_dni()}\n"
-                        f"Fecha: {turno.get_fecha()} a las {turno.get_hora()}\n"
-                        f"Tratamiento: {turno._tratamiento}")
-                messagebox.showinfo("Resultado de Búsqueda", info)
-            else:
-                messagebox.showwarning("Resultado", f"Turno con ID {id_buscar} no encontrado.")
-
-    def ejecutar_eliminacion_turno(self):
-        id_eliminar = simpledialog.askinteger("Cancelar Turno", "Ingrese el ID del Turno a cancelar:", parent=self.ventana_turnos)
-        if id_eliminar is not None:
-            confirmar = messagebox.askyesno("Confirmar", f"¿Seguro que desea cancelar el Turno ID {id_eliminar}?")
-            if confirmar:
-                if self.manager.eliminar_turno(id_eliminar):
-                    messagebox.showinfo("Éxito", f"✅ Turno ID {id_eliminar} cancelado correctamente.")
-                else:
-                    messagebox.showerror("Error", f"❌ No se encontró o no se pudo cancelar el Turno ID {id_eliminar}.")
-
-
+                messagebox.showerror("Error", "❌ No se pudo cancelar el turno. Verifique el ID.")
