@@ -1,0 +1,10 @@
+⚙️ Requisitos
+Python 3.11+
+Librerías utilizadas:
+pip install tkinter sqlite3
+conexion python-sql:
+pip install mysql-connector-python
+▶️ Ejecución del proyecto
+Clonar el repositorio
+Entrar a la carpeta del proyecto
+Ejecutar el sistema
