@@ -2,12 +2,12 @@
 import mysql.connector
 from mysql.connector import Error
 
-# NOTA CRÍTICA: Debes cambiar 'TU_USUARIO_MYSQL' y 'TU_PASSWORD_MYSQL'
+# NOTA CRÍTICA: Debes confirmar que estos datos sean correctos para tu instalación.
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root', 
-    'password': 'BelmeMySql2003', 
-    'database': 'db_kinesiologia'
+    'user': 'root',
+    'password': 'BelmeMySql2003', # Confirma este password
+    'database': 'db_kinesiologia' # Confirma que la BD se llama así
 }
 
 class Database:
@@ -15,66 +15,48 @@ class Database:
         self.conn = None
         self.cursor = None
         try:
-            # Conexión parametrizada [cite: 27]
             self.conn = mysql.connector.connect(**DB_CONFIG)
             if self.conn.is_connected():
-                # cursor(prepared=True) garantiza Consultas Preparadas 
-                self.cursor = self.conn.cursor(prepared=True)
+                self.cursor = self.conn.cursor()
+                # print("Conexión inicial exitosa.")
+            else:
+                print("Conexión inicial fallida.")
         except Error as e:
             print(f"Error al conectar a MySQL: {e}")
             self.conn = None
 
     def ejecutar_consulta(self, query, params=None):
-        if not self.conn:
-            return None
+        if not self.conn or not self.cursor:
+            # print("Error: Conexión o cursor no disponible.")
+            return False
         try:
             self.cursor.execute(query, params or ())
+            # NOTA: No hacemos commit aquí. Lo hace la función 'confirmar'.
             return True
         except Error as e:
             print(f"Error en la consulta: {e}")
             return False
 
-    # db/database.py (Fragmento de la clase Database)
-
-class Database:
-    def obtener_datos(self, query, params=None, fetch_all=False):
-        conexion = None
-        cursor = None
-        try:
-            # 1. Conectar y obtener el cursor
-            conexion = self.conectar() 
-            cursor = conexion.cursor() 
-            
-            # 2. Ejecutar la consulta
-            cursor.execute(query, params or ())
-            
-            # 3. Obtener resultado
+    def obtener_datos(self, query, params=None, fetch_all=True):
+        """
+        Ejecuta SELECT y obtiene los datos.
+        fetch_all=True (por defecto): devuelve todas las filas.
+        fetch_all=False: devuelve una sola fila.
+        """
+        if self.ejecutar_consulta(query, params):
             if fetch_all:
-                resultado = cursor.fetchall()
+                return self.cursor.fetchall()
             else:
-                resultado = cursor.fetchone()
-            
-            # 4. Retornar resultado
-            return resultado
-
-        except mysql.connector.Error as err:
-            print(f"Error en la consulta: {err.errno} ({err.sqlstate}): {err.msg}")
-            return None
-        except Exception as e:
-            print(f"Ocurrió un error inesperado: {e}")
-            return None
-        finally:
-            # 5. Cerrar el cursor y la conexión
-            if cursor:
-                cursor.close()
-            if conexion and conexion.is_connected():
-                conexion.close()
+                return self.cursor.fetchone()
+        return [] if fetch_all else None
 
     def confirmar(self):
+        """Aplica los cambios pendientes (INSERT, UPDATE, DELETE)."""
         if self.conn:
             self.conn.commit()
 
     def close(self):
+        """Cierra el cursor y la conexión."""
         if self.conn and self.conn.is_connected():
             self.cursor.close()
             self.conn.close()

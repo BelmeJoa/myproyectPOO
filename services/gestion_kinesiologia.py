@@ -1,9 +1,6 @@
-# services/gestion_kinesiologia.py
 from data.database import Database
 from models.paciente import Paciente
 from models.turno import Turno
-import tkinter as tk
-from tkinter import messagebox
 
 class GestionKinesiologia:
     def __init__(self):
@@ -32,10 +29,11 @@ class GestionKinesiologia:
         FROM persona p JOIN paciente pa ON p.id_persona = pa.id_paciente
         WHERE p.dni = %s
         """
-        resultado = self.db.obtener_datos(query, (dni,)) 
+        # Cambiamos fetch_all=True (por defecto) a False para obtener una sola fila
+        resultado = self.db.obtener_datos(query, (dni,), fetch_all=False) 
         
         if resultado:
-            datos = resultado[0]
+            datos = resultado
             paciente = Paciente(datos[0], datos[1], datos[2], datos[3], datos[4], datos[5])
             paciente._id = datos[6]
             return paciente
@@ -82,9 +80,11 @@ class GestionKinesiologia:
         FROM persona p JOIN paciente pa ON p.id_persona = pa.id_paciente
         ORDER BY p.apellido
         """
+        # Aquí sí usamos fetch_all=True
         return self.db.obtener_datos(query)
+        
     # =======================================================
-    # CRUD para Turnos
+    # CRUD para Turnos (CORREGIDO)
     # =======================================================
 
     def registrar_turno(self, turno):
@@ -97,72 +97,112 @@ class GestionKinesiologia:
         
         # 2. Ejecutar la consulta con el ID numérico
         query = "INSERT INTO turno (id_paciente, fecha, hora, tratamiento) VALUES (%s, %s, %s, %s)"
-        params = (id_paciente, turno.get_fecha(), turno.get_hora(), turno._tratamiento) 
+        params = (id_paciente, turno.get_fecha(), turno.get_hora(), turno._tratamiento)
         
-        db = Database()
-        resultado = db.ejecutar_consulta(query, params=params)
+        resultado = self.db.ejecutar_consulta(query, params=params)
         
         if resultado:
-            db.confirmar() # <--- ¡CORREGIDO! Se guarda el turno
-            
-        db.close()
-        return resultado
+            self.db.confirmar() 
+            return True
+        return False
 
     def buscar_turno_por_id(self, id_turno):
         """Busca un turno por su ID y devuelve un objeto Turno."""
-        query = "SELECT id, id_paciente, fecha, hora, tratamiento FROM turno WHERE id = %s"
+        # CORREGIDO: Usamos id_turno como PK y obtenemos el DNI del paciente.
+        query = """
+        SELECT 
+            t.id_turno, p.dni, t.fecha, t.hora, t.tratamiento 
+        FROM turno t
+        JOIN paciente pa ON t.id_paciente = pa.id_paciente
+        JOIN persona p ON pa.id_paciente = p.id_persona   
+        WHERE t.id_turno = %s 
+        """ 
         params = (id_turno,)
         
-        db = Database()
-        datos_turno = db.ejecutar_consulta(query, params=params, fetch_one=True)
-        db.close()
+        datos_turno = self.db.obtener_datos(query, params=params, fetch_all=False)
         
         if datos_turno:
-            # Creamos un objeto Turno (Recuerda que los datos[0] es el id)
-            return Turno(datos_turno[0], datos_turno[1], datos_turno[2], datos_turno[3], datos_turno[4])
+            # Creamos un objeto Turno: Turno(id_turno, dni, fecha, hora, tratamiento)
+            return Turno(datos_turno[0], datos_turno[1], datos_turno[2], datos_turno[3], datos_turno[4], datos_turno[5])
         return None
 
     def actualizar_turno(self, turno):
         """Actualiza la fecha, hora y tratamiento de un turno existente."""
+        # CORREGIDO: Usamos id_turno
         query = "UPDATE turno SET fecha = %s, hora = %s, tratamiento = %s WHERE id_turno = %s"
         params = (turno.get_fecha(), turno.get_hora(), turno._tratamiento, turno.get_id())
         
-        db = Database()
-        resultado = db.ejecutar_consulta(query, params=params)
+        resultado = self.db.ejecutar_consulta(query, params=params)
         
         if resultado:
-            db.confirmar() # <--- ¡CORREGIDO! Se guarda la actualización
-            
-        db.close()
-        return resultado
+            self.db.confirmar() 
+            return True
+        return False
 
     def eliminar_turno(self, id_turno):
         """Elimina un turno por su ID."""
+        # CORREGIDO: Usamos id_turno
         query = "DELETE FROM turno WHERE id_turno = %s"
         params = (id_turno,)
         
-        db = Database()
-        resultado = db.ejecutar_consulta(query, params=params)
+        resultado = self.db.ejecutar_consulta(query, params=params)
         
         if resultado:
-            db.confirmar() # <--- ¡CORREGIDO! Se guarda la eliminación
-            
-        db.close()
-        return resultado
+            self.db.confirmar()  
+            return True
+        return False
+
+    def listar_todos_turnos(self):
+        """
+        Lista todos los turnos, trayendo DNI, Apellido y Tratamiento del paciente.
+        """
+        query = """
+        SELECT 
+            t.id_turno, p.dni, p.apellido, t.fecha, t.hora, t.tratamiento 
+        FROM turno t
+        JOIN paciente pa ON t.id_paciente = pa.id_paciente
+        JOIN persona p ON pa.id_paciente = p.id_persona  
+        ORDER BY t.fecha DESC
+        """
+        datos_turnos = self.db.obtener_datos(query, fetch_all=True)
+
+        if datos_turnos:
+            turnos = []
+            for datos in datos_turnos:
+                turnos.append({
+                    'id': datos[0], 'dni': datos[1], 'apellido': datos[2], 
+                    'fecha': datos[3], 'hora': datos[4], 'tratamiento': datos[5] # <-- Asegurado
+                })
+            return turnos
+        return []
 
     def buscar_turnos_por_criterio(self, criterio, valor):
-        query = f"SELECT id, id_paciente, fecha, hora, tratamiento FROM turno WHERE {criterio} = %s ORDER BY hora"
-        db = Database()
-        # 1. OBTIENE LOS DATOS (SELECT)
-        datos_turnos = db.obtener_datos(query, params=(valor,))
-        db.close()
-        return datos_turnos
-    def listar_todos_turnos(self):
-        """Retorna una lista de todos los objetos Turno en la BD."""
-        query = "SELECT id_turno, id_paciente, fecha, hora, tratamiento FROM turno ORDER BY fecha, hora"
+        """
+        Busca turnos por DNI (criterio='dni') o por Fecha (criterio='fecha'), incluyendo tratamiento.
+        """
         
-        db = Database()
-        datos_turnos = db.obtener_datos(query, fetch_all=True) 
-        db.close()
+        if criterio == 'dni':
+            criterio_busqueda = "p.dni"
+            valor_busqueda = valor 
+        elif criterio == 'fecha': 
+            criterio_busqueda = "t.fecha"
+            valor_busqueda = valor
+        else:
+            return []
 
-        return datos_turnos
+        query = f"""
+        SELECT 
+            t.id_turno, p.dni, p.apellido, t.fecha, t.hora, t.tratamiento 
+        FROM turno t
+        JOIN paciente pa ON t.id_paciente = pa.id_paciente
+        JOIN persona p ON pa.id_paciente = p.id_persona  
+        WHERE {criterio_busqueda} = %s
+        ORDER BY t.fecha DESC
+        """
+        
+        datos_turnos = self.db.obtener_datos(query, (valor_busqueda,), fetch_all=True)
+
+        if datos_turnos:
+            # tratamiento/motivo es el índice 5
+            return [{'id': d[0], 'dni': d[1], 'apellido': d[2], 'fecha': d[3], 'hora': d[4], 'tratamiento': d[5]} for d in datos_turnos] # <-- Asegurado
+        return []

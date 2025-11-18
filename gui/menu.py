@@ -5,6 +5,7 @@ from services.gestion_kinesiologia import GestionKinesiologia
 from models.paciente import Paciente 
 from models.turno import Turno
 from utils.validador import Validador 
+from datetime import date
 
 # --- CONFIGURACIÓN DE ESTILOS ---
 COLOR_PRINCIPAL = "#90EE90"  # Verde Manzana (LightGreen)
@@ -46,23 +47,23 @@ class InterfazKinesiologia(tk.Frame):
         
         # Botones CRUD Pacientes (GRID)
         self._crear_boton(frame_principal, "1. Registrar Paciente (C)", self.abrir_registro, 
-                          row=1, column=0, color=COLOR_PRINCIPAL)
+                              row=1, column=0, color=COLOR_PRINCIPAL)
         self._crear_boton(frame_principal, "2. Buscar Paciente (R)", self.abrir_busqueda, 
-                          row=1, column=1, color=COLOR_PRINCIPAL)
+                              row=1, column=1, color=COLOR_PRINCIPAL)
         self._crear_boton(frame_principal, "3. Actualizar Paciente (U)", self.abrir_actualizacion, 
-                          row=2, column=0, color=COLOR_PRINCIPAL)
+                              row=2, column=0, color=COLOR_PRINCIPAL)
         self._crear_boton(frame_principal, "4. Eliminar Paciente (D)", self.abrir_eliminacion, 
-                          row=2, column=1, color=COLOR_PRINCIPAL)
-                          
+                              row=2, column=1, color=COLOR_PRINCIPAL)
+                              
         # Separación y Subtítulo: Reportes y Turnos
         tk.Label(frame_principal, text="--- Agenda y Reportes ---", 
                  font=FUENTE_SUBTITULO, bg=COLOR_FONDO, fg=COLOR_SECUNDARIO).grid(row=3, column=0, columnspan=2, pady=(10, 5), sticky='ew')
 
         # Botones de Reporte y Turnos
         self._crear_boton(frame_principal, "5. Generar Reporte Pacientes", self.generar_reporte, 
-                          row=4, column=0, columnspan=2, color=COLOR_SECUNDARIO)
+                              row=4, column=0, columnspan=2, color=COLOR_SECUNDARIO)
         self._crear_boton(frame_principal, "6. Gestión de Turnos", self.abrir_gestion_turnos, 
-                          row=5, column=0, columnspan=2, color=COLOR_SECUNDARIO)
+                              row=5, column=0, columnspan=2, color=COLOR_SECUNDARIO)
 
         # Botón Salir (Abajo)
         tk.Button(self, text="7. SALIR", command=self.master.quit, font=('Segoe UI', 12, 'bold'),
@@ -72,8 +73,8 @@ class InterfazKinesiologia(tk.Frame):
     def _crear_boton(self, master, texto, comando, row, column, columnspan=1, color=COLOR_PRINCIPAL):
         """Función auxiliar para crear botones con estilo unificado y grid."""
         return tk.Button(master, text=texto, command=comando, font=FUENTE_PRINCIPAL,
-                         bg=color, fg=COLOR_TEXTO, relief=tk.RAISED, padx=15, pady=8).grid(
-                             row=row, column=column, columnspan=columnspan, padx=10, pady=5, sticky='ew')
+                          bg=color, fg=COLOR_TEXTO, relief=tk.RAISED, padx=15, pady=8).grid(
+                               row=row, column=column, columnspan=columnspan, padx=10, pady=5, sticky='ew')
 
     # =======================================================
     # 1. FORMULARIO DE REGISTRO (CREATE)
@@ -88,7 +89,7 @@ class InterfazKinesiologia(tk.Frame):
         self.entradas_registro = {}
         
         frame_campos = tk.Frame(self.ventana_registro, bg=COLOR_FONDO)
-        frame_campos.pack(padx=10, pady=10) # El Frame usa pack()
+        frame_campos.pack(padx=10, pady=10) 
         # ----------------------------------------------------
         
         for i, campo in enumerate(campos):
@@ -139,7 +140,7 @@ class InterfazKinesiologia(tk.Frame):
             if paciente:
                 info = (f"Paciente Encontrado:\n\n"
                         f"DNI: {paciente.get_dni()}\n"
-                        f"Nombre: {paciente.get_nombre()} {paciente.get_apellido()}\n" # Usamos getter si está disponible
+                        f"Nombre: {paciente.get_nombre()} {paciente.get_apellido()}\n"
                         f"Nacimiento: {paciente._fecha_nacimiento}\n"
                         f"Historia Clínica: {paciente._historia_clinica}\n"
                         f"Obra Social: {paciente._obra_social}")
@@ -192,10 +193,10 @@ class InterfazKinesiologia(tk.Frame):
 
         # Asignar los nuevos valores al objeto Paciente
         paciente.set_nombre(datos['Nombre'])
-        paciente.set_apellido(datos['Apellido']) # Usamos setter si existe
+        paciente.set_apellido(datos['Apellido']) 
         paciente._fecha_nacimiento = datos['F. Nacimiento (AAAA-MM-DD)']
-        paciente.set_historia_clinica(datos['Historia Clínica']) # Usamos setter si existe
-        paciente.set_obra_social(datos['Obra Social']) # Usamos setter si existe
+        paciente.set_historia_clinica(datos['Historia Clínica']) 
+        paciente.set_obra_social(datos['Obra Social']) 
         
         # Validación de fecha 
         if not Validador.validar_fecha(paciente._fecha_nacimiento):
@@ -232,25 +233,18 @@ class InterfazKinesiologia(tk.Frame):
         if not pacientes:
             return messagebox.showwarning("Reporte", "No hay pacientes registrados en la base de datos.")
             
-        self.ventana_reporte = tk.Toplevel(self.master, bg=COLOR_FONDO)
-        self.ventana_reporte.title(f"Reporte de Pacientes ({len(pacientes)} en Total)")
-        self.ventana_reporte.geometry("600x400")
         
-        reporte_texto = scrolledtext.ScrolledText(self.ventana_reporte, width=80, height=20, font=('Courier', 10), bg=COLOR_FONDO, fg=COLOR_TEXTO)
-        reporte_texto.pack(pady=10, padx=10, fill="both", expand=True)
-
         # Encabezado
-        reporte_texto.insert(tk.END, f"--- REPORTE DE PACIENTES KINÉSICOS (Total: {len(pacientes)}) ---\n")
-        reporte_texto.insert(tk.END, "DNI         | APELLIDO, NOMBRE       | HC NRO.    | OBRA SOCIAL\n")
-        reporte_texto.insert(tk.END, "------------|------------------------|------------|-------------------\n")
+        reporte_texto = f"--- REPORTE DE PACIENTES KINÉSICOS (Total: {len(pacientes)}) ---\n"
+        reporte_texto += "DNI         | APELLIDO, NOMBRE       | HC NRO.    | OBRA SOCIAL\n"
+        reporte_texto += "------------|------------------------|------------|-------------------\n"
 
         # Cargar los datos
-        for p in pacientes:
-            dni, nombre, apellido, hc, obra_social = p
+        for dni, nombre, apellido, hc, obra_social in pacientes:
             linea = f"{dni:<11} | {apellido}, {nombre:<10} | {hc:<10} | {obra_social}\n" 
-            reporte_texto.insert(tk.END, linea)
+            reporte_texto += linea
 
-        reporte_texto.config(state=tk.DISABLED) # Deshabilita la edición
+        self.mostrar_reporte_en_ventana(f"Reporte de Pacientes ({len(pacientes)} en Total)", reporte_texto)
         
     # =======================================================
     # 6. GESTIÓN DE TURNOS (Submenú)
@@ -262,27 +256,23 @@ class InterfazKinesiologia(tk.Frame):
         ventana_reporte.title(titulo)
         ventana_reporte.geometry("600x400") 
 
-        caja_texto = scrolledtext.ScrolledText(ventana_reporte, width=70, height=20, font=('Consolas', 10), bg=COLOR_FONDO, fg=COLOR_TEXTO)
-        caja_texto.insert(tk.END, contenido)
-        caja_texto.config(state=tk.DISABLED)
-        caja_texto.pack(pady=10, padx=10)
+        # Frame para el contenido desplazable
+        frame_contenido = tk.Frame(ventana_reporte, bg='white')
+        frame_contenido.pack(expand=True, fill='both')
 
-    def ejecutar_listado_turnos(self):
-        """Muestra una lista de todos los turnos registrados en la base de datos."""
-        turnos = self.manager.listar_todos_turnos()
+        # Scrollbar vertical
+        scrollbar = tk.Scrollbar(frame_contenido, orient="vertical")
         
-        if not turnos:
-            return messagebox.showinfo("Listado de Turnos", "No hay turnos registrados en la base de datos.")
+        # Widget Text para mostrar el listado
+        listado_text = tk.Text(frame_contenido, wrap="none", yscrollcommand=scrollbar.set, font=('Courier New', 10), bg='white', fg='black')
+        
+        scrollbar.config(command=listado_text.yview)
+        scrollbar.pack(side="right", fill="y")
+        listado_text.pack(expand=True, fill='both', padx=10, pady=10)
+        
+        listado_text.insert("1.0", contenido)
+        listado_text.config(state="disabled") # Hacer el texto de solo lectura
 
-        listado_texto = "AGENDA DE TURNOS REGISTRADOS\n\n"
-        listado_texto += "ID | ID Paciente | Fecha     | Hora  | Tratamiento\n"
-        listado_texto += "---|-------------|-----------|-------|--------------------\n"
-        
-        for t in turnos:
-            listado_texto += (f"{t.get_id():<2} | {t.get_paciente_dni():<11} | " # Muestra ID numérico de paciente
-                              f"{t.get_fecha()} | {t.get_hora()} | {t._tratamiento}\n")
-            
-        self.mostrar_reporte_en_ventana("Reporte de Turnos", listado_texto)
 
     def abrir_gestion_turnos(self):
         self.ventana_turnos = tk.Toplevel(self.master, bg=COLOR_FONDO)
@@ -291,21 +281,21 @@ class InterfazKinesiologia(tk.Frame):
         
         tk.Label(self.ventana_turnos, text="Opciones de Turnos", font=('Segoe UI', 14, 'bold'), 
                  bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=10)
-                 
+                         
         
         frame_botones_grid = tk.Frame(self.ventana_turnos, bg=COLOR_FONDO)
         frame_botones_grid.pack(pady=5, padx=20) 
         # ----------------------------------------------------
 
-       
-        self._crear_boton(frame_botones_grid, "1. Registrar Nuevo Turno", 
-                          self.abrir_registro_turno, row=1, column=0, columnspan=2, color=COLOR_PRINCIPAL)
         
-        self._crear_boton(frame_botones_grid, "2. Buscar y Gestionar Turnos (ID/Fecha)", 
-                          self.abrir_gestion_busqueda_turnos, row=2, column=0, columnspan=2, color=COLOR_SECUNDARIO)
+        self._crear_boton(frame_botones_grid, "1. Registrar Nuevo Turno", 
+                              self.abrir_registro_turno, row=1, column=0, columnspan=2, color=COLOR_PRINCIPAL)
+        
+        self._crear_boton(frame_botones_grid, "2. Buscar y Gestionar Turnos (DNI/Fecha)", 
+                              self.abrir_gestion_busqueda_turnos, row=2, column=0, columnspan=2, color=COLOR_SECUNDARIO)
 
         self._crear_boton(frame_botones_grid, "3. Listar Todos los Turnos",
-                          self.ejecutar_listado_turnos, row=3, column=0, columnspan=2, color=COLOR_SECUNDARIO)
+                              self.ejecutar_listado_turnos, row=3, column=0, columnspan=2, color=COLOR_SECUNDARIO)
         
         tk.Button(self.ventana_turnos, text="Cerrar Menú", font=FUENTE_PRINCIPAL,
                   command=self.ventana_turnos.destroy, bg='#DC143C', fg='white', relief=tk.FLAT).pack(pady=10)
@@ -365,78 +355,97 @@ class InterfazKinesiologia(tk.Frame):
         else:
             messagebox.showerror("Error", "❌ Error al registrar el turno en la BD.")
 
-    def abrir_gestion_busqueda_turnos(self):
-        """Abre la ventana para buscar turnos por criterio."""
-
-        ventana_busqueda = tk.Toplevel(self.master, bg=COLOR_FONDO)
-        ventana_busqueda.title("Buscar Turnos por Criterio")
-        ventana_busqueda.geometry("500x500") 
-
-        tk.Label(ventana_busqueda, text="Buscar Turnos", font=('Segoe UI', 14, 'bold'), bg=COLOR_FONDO).pack(pady=10)
-
-        # 1. Selección de Criterio
-        # Usamos 'id_paciente' que es la columna de la tabla turno
-        self.criterio_busqueda_var = tk.StringVar(value='id_paciente') 
+    def ejecutar_listado_turnos(self):
+        """Muestra una ventana con el listado completo de turnos (incluye tratamiento)."""
+        turnos = self.manager.listar_todos_turnos()
         
-        frame_criterio = tk.Frame(ventana_busqueda, bg=COLOR_FONDO)
-        tk.Label(frame_criterio, text="Buscar por:", bg=COLOR_FONDO).pack(side='left', padx=10)
-        tk.Radiobutton(frame_criterio, text="ID Paciente", variable=self.criterio_busqueda_var, 
-                       value='id_paciente', bg=COLOR_FONDO).pack(side='left')
-        tk.Radiobutton(frame_criterio, text="Fecha (AAAA-MM-DD)", variable=self.criterio_busqueda_var, 
-                       value='fecha', bg=COLOR_FONDO).pack(side='left')
-        frame_criterio.pack(pady=10)
+        if not turnos:
+            return messagebox.showinfo("Listado de Turnos", "No hay turnos registrados en la base de datos.")
 
-        # 2. Campo de Valor de Búsqueda
-        self.valor_busqueda_var = tk.StringVar()
-        tk.Label(ventana_busqueda, text="Ingrese Valor:", bg=COLOR_FONDO).pack(pady=5)
-        tk.Entry(ventana_busqueda, textvariable=self.valor_busqueda_var, width=40, font=FUENTE_PRINCIPAL).pack(pady=5)
+        listado_texto = "--- LISTADO DE TURNOS ---\n"
+        # ✅ CAMBIO: Añadir Motivo/Tratamiento al encabezado
+        listado_texto += (f"{'Apellido':<15} | {'DNI Paciente':<12} | {'Fecha':<10} | {'Hora':<5} | {'Estado':<10} | {'Motivo/Tratamiento'}\n")
+        listado_texto += "-" * 75 + "\n" # Longitud ajustada para el nuevo campo
 
-        # 3. Botón de Búsqueda
-        tk.Button(ventana_busqueda, text="Buscar Turnos", font=FUENTE_PRINCIPAL,
-                   bg=COLOR_SECUNDARIO, fg=COLOR_TEXTO, relief=tk.FLAT,
-                   command=lambda: self.ejecutar_busqueda_flexible(ventana_busqueda)).pack(pady=15)
+        hoy = date.today()
+        for t in turnos:
+            fecha_turno = t['fecha'] 
+            estado = "EXPIRADO" if fecha_turno < hoy else "VIGENTE"
+            
+            # ✅ CAMBIO: Añadir el motivo/tratamiento al final
+            listado_texto += (f"{t['apellido']:<15} | {t['dni']:<12} | "
+                               f"{str(fecha_turno):<10} | {str(t['hora']):<5} | {estado:<10} | {t['tratamiento']}\n")
 
-        # 4. Área para mostrar resultados
-        self.caja_resultados_turnos = scrolledtext.ScrolledText(ventana_busqueda, width=60, height=10, font=('Consolas', 10), bg=COLOR_FONDO, fg=COLOR_TEXTO)
-        self.caja_resultados_turnos.pack(pady=10, padx=10)
-        self.caja_resultados_turnos.insert(tk.END, "Aquí se mostrarán los resultados de la búsqueda.")
-        self.caja_resultados_turnos.config(state=tk.DISABLED)
+        self.mostrar_reporte_en_ventana("Listado de Turnos", listado_texto)
 
 
-    def ejecutar_busqueda_flexible(self, ventana_busqueda):
-        criterio = self.criterio_busqueda_var.get()
-        valor = self.valor_busqueda_var.get()
+    def abrir_gestion_busqueda_turnos(self):
+        """Abre el formulario para buscar turnos por DNI o Fecha."""
+        self.ventana_gestion_busqueda_turnos = tk.Toplevel(self.master, bg=COLOR_FONDO)
+        self.ventana_gestion_busqueda_turnos.title("Buscar y Gestionar Turnos")
+        self.ventana_gestion_busqueda_turnos.geometry("450x200")
+
+        tk.Label(self.ventana_gestion_busqueda_turnos, text="Buscar Turno", font=('Segoe UI', 14, 'bold'),
+                 bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=10)
+
+        tk.Label(self.ventana_gestion_busqueda_turnos, text="Buscar por:", bg=COLOR_FONDO, fg=COLOR_TEXTO, font=FUENTE_PRINCIPAL).pack()
+
+        # Usamos una lista de criterio para la búsqueda (DNI o Fecha)
+        criterios = ['DNI Paciente', 'Fecha (AAAA-MM-DD)']
+        self.criterio_busqueda_turnos = tk.StringVar(self.ventana_gestion_busqueda_turnos)
+        self.criterio_busqueda_turnos.set(criterios[0]) # Valor inicial
+
+        tk.OptionMenu(self.ventana_gestion_busqueda_turnos, self.criterio_busqueda_turnos, *criterios).pack(pady=5)
+
+        tk.Label(self.ventana_gestion_busqueda_turnos, text="Valor a buscar:", bg=COLOR_FONDO, fg=COLOR_TEXTO, font=FUENTE_PRINCIPAL).pack()
+        self.entrada_busqueda_turnos = tk.Entry(self.ventana_gestion_busqueda_turnos, font=FUENTE_PRINCIPAL)
+        self.entrada_busqueda_turnos.pack(pady=5)
+        
+        tk.Button(self.ventana_gestion_busqueda_turnos, text="Buscar", font=FUENTE_PRINCIPAL,
+                  bg=COLOR_PRINCIPAL, fg=COLOR_TEXTO, relief=tk.FLAT,
+                  command=self.ejecutar_busqueda_flexible).pack(pady=10)
+        
+    def ejecutar_busqueda_flexible(self):
+        """Ejecuta la búsqueda de turnos según el criterio seleccionado y MUESTRA EL LISTADO (incluye tratamiento)."""
+        
+        criterio_display = self.criterio_busqueda_turnos.get()
+        valor = self.entrada_busqueda_turnos.get().strip()
 
         if not valor:
-            return messagebox.showwarning("Advertencia", "Debe ingresar un valor de búsqueda.")
+            messagebox.showwarning("Advertencia", "Debe ingresar un valor de búsqueda.")
+            return
 
-        turnos = self.manager.buscar_turnos_por_criterio(criterio, valor)
+        # Mapeo del criterio de display al nombre de columna real en la BD
+        if criterio_display == 'DNI Paciente':
+            criterio_db = 'dni' 
+        else: # 'Fecha (AAAA-MM-DD)'
+            criterio_db = 'fecha'
 
-        self.caja_resultados_turnos.config(state=tk.NORMAL)
-        self.caja_resultados_turnos.delete('1.0', tk.END) 
-
-        if not turnos:
-            self.caja_resultados_turnos.insert(tk.END, f"No se encontraron turnos para {valor} ({criterio}).")
-        else:
-            self.caja_resultados_turnos.insert(tk.END, f"TURNOS ENCONTRADOS para {criterio.upper()}: {valor}\n\n")
-            
+        # Llama al manager para obtener la lista de turnos
+        turnos = self.manager.buscar_turnos_por_criterio(criterio_db, valor)
+        
+        # --- Generar el texto completo del listado ---
+        listado_texto = f"--- RESULTADOS DE BÚSQUEDA por {criterio_display}: {valor} ---\n"
+        # ✅ CAMBIO: Añadir Motivo/Tratamiento al encabezado
+        listado_texto += (f"{'Apellido':<15} | {'DNI Paciente':<12} | {'Fecha':<10} | {'Hora':<5} | {'Estado':<10} | {'Motivo/Tratamiento'}\n")
+        listado_texto += "-" * 75 + "\n"
+        
+        if turnos:
+            hoy = date.today()
             for t in turnos:
-                self.caja_resultados_turnos.insert(tk.END, 
-                    f"  [ID Turno: {t.get_id()}] | ID Paciente: {t.get_paciente_dni()}\n" 
-                    f"  Fecha: {t.get_fecha()} | Hora: {t.get_hora()} | Tratamiento: {t._tratamiento}\n"
-                    f"{'-'*60}\n"
-                )
-
-            # Opciones de gestión (Cancelación)
-            tk.Label(ventana_busqueda, text="Para Cancelar, ingrese el ID del Turno:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=5)
-            self.id_cancelar_var = tk.StringVar()
-            tk.Entry(ventana_busqueda, textvariable=self.id_cancelar_var, width=10, font=FUENTE_PRINCIPAL).pack(pady=5)
-            tk.Button(ventana_busqueda, text="Cancelar Turno por ID", 
-                      bg='#DC143C', fg='white', relief=tk.FLAT, font=FUENTE_PRINCIPAL,
-                      command=lambda: self.ejecutar_cancelacion_desde_busqueda(self.id_cancelar_var.get(), ventana_busqueda)).pack(pady=10)
-
-
-        self.caja_resultados_turnos.config(state=tk.DISABLED)
+                fecha_turno = t['fecha']
+                estado = "EXPIRADO" if fecha_turno < hoy else "VIGENTE"
+                
+                # ✅ CAMBIO: Añadir el motivo/tratamiento al final
+                listado_texto += (f"{t['apellido']:<15} | {t['dni']:<12} | "
+                                  f"{str(fecha_turno):<10} | {str(t['hora']):<5} | {estado:<10} | {t['tratamiento']}\n")
+            
+            self.mostrar_reporte_en_ventana("Resultados de Búsqueda", listado_texto)
+            self.ventana_gestion_busqueda_turnos.destroy() 
+            
+        else:
+            listado_texto += f"No se encontró ningún turno para el {criterio_display}: {valor}\n"
+            messagebox.showinfo("Búsqueda", listado_texto)
 
     def ejecutar_cancelacion_desde_busqueda(self, turno_id, ventana_busqueda):
         """Cancela un turno después de haber sido listado en la búsqueda flexible."""
