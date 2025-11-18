@@ -34,16 +34,47 @@ class Database:
             print(f"Error en la consulta: {e}")
             return False
 
-    def obtener_datos(self, query, params=None):
-        if self.ejecutar_consulta(query, params):
-            return self.cursor.fetchall()
-        return []
+    # db/database.py (Fragmento de la clase Database)
+
+class Database:
+    def obtener_datos(self, query, params=None, fetch_all=False):
+        conexion = None
+        cursor = None
+        try:
+            # 1. Conectar y obtener el cursor
+            conexion = self.conectar() 
+            cursor = conexion.cursor() 
+            
+            # 2. Ejecutar la consulta
+            cursor.execute(query, params or ())
+            
+            # 3. Obtener resultado
+            if fetch_all:
+                resultado = cursor.fetchall()
+            else:
+                resultado = cursor.fetchone()
+            
+            # 4. Retornar resultado
+            return resultado
+
+        except mysql.connector.Error as err:
+            print(f"Error en la consulta: {err.errno} ({err.sqlstate}): {err.msg}")
+            return None
+        except Exception as e:
+            print(f"Ocurrió un error inesperado: {e}")
+            return None
+        finally:
+            # 5. Cerrar el cursor y la conexión
+            if cursor:
+                cursor.close()
+            if conexion and conexion.is_connected():
+                conexion.close()
 
     def confirmar(self):
         if self.conn:
             self.conn.commit()
 
-    def cerrar(self):
+    def close(self):
         if self.conn and self.conn.is_connected():
             self.cursor.close()
             self.conn.close()

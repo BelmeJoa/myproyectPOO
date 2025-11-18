@@ -2,6 +2,8 @@
 from data.database import Database
 from models.paciente import Paciente
 from models.turno import Turno
+import tkinter as tk
+from tkinter import messagebox
 
 class GestionKinesiologia:
     def __init__(self):
@@ -86,18 +88,29 @@ class GestionKinesiologia:
     # =======================================================
 
     def registrar_turno(self, turno):
-        """Registra un nuevo turno en la base de datos."""
-        query = "INSERT INTO turno (paciente_dni, fecha, hora, tratamiento) VALUES (%s, %s, %s, %s)"
-        params = (turno.get_paciente_dni(), turno.get_fecha(), turno.get_hora(), turno._tratamiento)
+        "Registra un nuevo turno en la base de datos."
+        paciente = self.buscar_paciente_por_dni(turno.get_paciente_dni())
+        if not paciente:
+            return False 
+            
+        id_paciente = paciente._id # El ID que la BD espera
+        
+        # 2. Ejecutar la consulta con el ID numérico
+        query = "INSERT INTO turno (id_paciente, fecha, hora, tratamiento) VALUES (%s, %s, %s, %s)"
+        params = (id_paciente, turno.get_fecha(), turno.get_hora(), turno._tratamiento) 
         
         db = Database()
-        resultado = db.ejecutar_consulta(query, params=params, commit=True)
+        resultado = db.ejecutar_consulta(query, params=params)
+        
+        if resultado:
+            db.confirmar() # <--- ¡CORREGIDO! Se guarda el turno
+            
         db.close()
         return resultado
 
     def buscar_turno_por_id(self, id_turno):
         """Busca un turno por su ID y devuelve un objeto Turno."""
-        query = "SELECT id, paciente_dni, fecha, hora, tratamiento FROM turno WHERE id = %s"
+        query = "SELECT id, id_paciente, fecha, hora, tratamiento FROM turno WHERE id = %s"
         params = (id_turno,)
         
         db = Database()
@@ -111,32 +124,45 @@ class GestionKinesiologia:
 
     def actualizar_turno(self, turno):
         """Actualiza la fecha, hora y tratamiento de un turno existente."""
-        query = "UPDATE turno SET fecha = %s, hora = %s, tratamiento = %s WHERE id = %s"
+        query = "UPDATE turno SET fecha = %s, hora = %s, tratamiento = %s WHERE id_turno = %s"
         params = (turno.get_fecha(), turno.get_hora(), turno._tratamiento, turno.get_id())
         
         db = Database()
-        resultado = db.ejecutar_consulta(query, params=params, commit=True)
+        resultado = db.ejecutar_consulta(query, params=params)
+        
+        if resultado:
+            db.confirmar() # <--- ¡CORREGIDO! Se guarda la actualización
+            
         db.close()
         return resultado
 
     def eliminar_turno(self, id_turno):
         """Elimina un turno por su ID."""
-        query = "DELETE FROM turno WHERE id = %s"
+        query = "DELETE FROM turno WHERE id_turno = %s"
         params = (id_turno,)
         
         db = Database()
-        resultado = db.ejecutar_consulta(query, params=params, commit=True)
+        resultado = db.ejecutar_consulta(query, params=params)
+        
+        if resultado:
+            db.confirmar() # <--- ¡CORREGIDO! Se guarda la eliminación
+            
         db.close()
         return resultado
 
     def buscar_turnos_por_criterio(self, criterio, valor):
-        # ... código para armar la query ...
-        
+        query = f"SELECT id, id_paciente, fecha, hora, tratamiento FROM turno WHERE {criterio} = %s ORDER BY hora"
         db = Database()
         # 1. OBTIENE LOS DATOS (SELECT)
         datos_turnos = db.obtener_datos(query, params=(valor,))
-        db.cerrar()
+        db.close()
+        return datos_turnos
+    def listar_todos_turnos(self):
+        """Retorna una lista de todos los objetos Turno en la BD."""
+        query = "SELECT id_turno, id_paciente, fecha, hora, tratamiento FROM turno ORDER BY fecha, hora"
         
-        # ... Aquí el código procesa lista_turnos ...
-        # ...
+        db = Database()
+        datos_turnos = db.obtener_datos(query, fetch_all=True) 
+        db.close()
+
         return datos_turnos
