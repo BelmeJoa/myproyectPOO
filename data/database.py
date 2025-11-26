@@ -2,7 +2,6 @@
 import mysql.connector
 from mysql.connector import Error
 
-# NOTA CRÍTICA: Debes confirmar que estos datos sean correctos para tu instalación.
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
@@ -31,7 +30,6 @@ class Database:
             return False
         try:
             self.cursor.execute(query, params or ())
-            # NOTA: No hacemos commit aquí. Lo hace la función 'confirmar'.
             return True
         except Error as e:
             print(f"Error en la consulta: {e}")
